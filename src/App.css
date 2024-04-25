@@ -9,3 +9,24 @@
   padding: 2em;
 }
 
+.Grid {
+  margin: 18px 0 32px 0;
+  border: 2px solid black;
+  height: 50vw;
+  width: 50vw;
+  display: grid;
+  /* grid-template-rows: repeat(10, 1fr); */
+}
+
+.Row {
+  display: grid;
+  /* grid-template-columns: repeat(10, 1fr); */
+}
+
+.Cell {
+  border: 1px solid black;
+  font-size: 2rem; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
