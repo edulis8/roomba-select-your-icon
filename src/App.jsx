@@ -16,7 +16,6 @@ function App() {
       Array.from({ length: gridLength }, () => ''),
     ),
   );
-  const wrapperRef = useRef(null);
 
   useEffect(() => {
     setLocation(row, col);
@@ -26,17 +25,6 @@ function App() {
   useEffect(() => {
     setLocation(0, 0);
   }, [gridLength]);
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-  });
-
-  function handleClickOutside(event) {
-    // todo check event and current and stuff
-    if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-      setShowCheckboxes(false);
-    }
-  }
 
   function rotateRight() {
     setDirection((dir) => (dir + 1) % 4);
@@ -90,13 +78,8 @@ function App() {
     return '';
   }
 
-  // function handleSetIcon(newIcon) {
-  //   console.log({ newIcon });
-  //   setIcon((prevIcon) => newIcon);
-  // }
-
   return (
-    <div ref={wrapperRef}>
+    <div>
       <h1>Configurable Robot Vacuum 😎</h1>
       <div>
         <IconSelector
@@ -162,8 +145,25 @@ function IconSelector({
   onSetSelectedIcons,
   onSetShowCheckboxes,
 }) {
-  // const [searchTerm, setSearchTerm] = useState(initialIcon);
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  });
+
+  const wrapperRef = useRef(null);
   const icons = ['⬆️', '☝️', '🔺', '⌃', '🙏'];
+
+  function handleClickOutside(event) {
+    // todo check event and current and stuff
+    console.log('event.target', event.target);
+    console.log(wrapperRef, wrapperRef.current);
+    if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+      onSetShowCheckboxes(false);
+    }
+  }
 
   function toggleIcon(icon) {
     if (selectedIcons.includes(icon)) {
@@ -196,7 +196,7 @@ function IconSelector({
         // onChange={(e) => setSearchTerm(e.target.value)}
         onFocus={() => onSetShowCheckboxes(true)}
       />
-      <section className="checkboxes" hidden={!showCheckboxes}>
+      <section className="checkboxes" hidden={!showCheckboxes} ref={wrapperRef}>
         {icons.map((icon) => (
           <div key={icon}>
             <input
