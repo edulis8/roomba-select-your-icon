@@ -9,6 +9,12 @@
   padding: 2em;
 }
 
+main.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .Grid {
   margin: 18px 0 32px 0;
   border: 2px solid black;
@@ -25,8 +31,14 @@
 
 .Cell {
   border: 1px solid black;
-  font-size: 2rem; 
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+select {
+  font-size: 16px;
+  padding: 8px;
+  margin: 0 0 0 5px;
 }

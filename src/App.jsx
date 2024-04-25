@@ -1,31 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './App.css';
 
-const ICON = '⬆️';
 // todo make configurable
 function App() {
+  // const [icons, setIcon] = useState();
   const [gridLength, setGridLength] = useState(10);
   const [direction, setDirection] = useState(0);
+  const [selectedIcons, setSelectedIcons] = useState(['⬆️']);
+  const [iconIndex, setIconIndex] = useState(0);
   const [row, setRow] = useState(0);
   const [col, setCol] = useState(0);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [grid, setGrid] = useState(
     Array.from({ length: gridLength }, () =>
       Array.from({ length: gridLength }, () => ''),
     ),
   );
+  const wrapperRef = useRef(null);
 
   useEffect(() => {
     setLocation(row, col);
-    console.log(
-      'FYI: useEffect double-invocation only happens in development mode, and not in production builds.',
-    );
-
-    return () => console.log('unmounting useEffect');
-  }, []);
+    setIconIndex(0);
+  }, [selectedIcons]);
 
   useEffect(() => {
     setLocation(0, 0);
   }, [gridLength]);
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+  });
+
+  function handleClickOutside(event) {
+    // todo check event and current and stuff
+    if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+      setShowCheckboxes(false);
+    }
+  }
 
   function rotateRight() {
     setDirection((dir) => (dir + 1) % 4);
@@ -37,11 +48,13 @@ function App() {
     );
     setRow(row);
     setCol(col);
-    newGrid[row][col] = ICON;
+    newGrid[row] = [...newGrid[row]];
+    newGrid[row][col] = selectedIcons[iconIndex];
     setGrid(newGrid);
   }
 
   function handleMoveForward() {
+    setIconIndex((iconIndex + 1) % selectedIcons.length);
     // 0-up, 1-right, 2-down, 3-left
     // 0,3 -up/down - row move
     let newRow = row;
@@ -77,55 +90,127 @@ function App() {
     return '';
   }
 
+  // function handleSetIcon(newIcon) {
+  //   console.log({ newIcon });
+  //   setIcon((prevIcon) => newIcon);
+  // }
+
   return (
-    <>
+    <div ref={wrapperRef}>
       <h1>Configurable Robot Vacuum 😎</h1>
+      <div>
+        <IconSelector
+          showCheckboxes={showCheckboxes}
+          onSetShowCheckboxes={setShowCheckboxes}
+          selectedIcons={selectedIcons}
+          onSetSelectedIcons={setSelectedIcons}
+        />
+      </div>
       <button onClick={rotateRight} type="button">
         Rotate Roomba Right
       </button>
       <button onClick={() => handleMoveForward()} type="button">
         Move Forward
       </button>
-      <select onChange={handleGridLengthChange}>
+      <select onChange={handleGridLengthChange} value={10}>
         <option value="5">5</option>
-        <option value="10" selected>
-          10
-        </option>
+        <option value="10">10</option>
         <option value="15">15</option>
       </select>
-      <main
-        className="Grid"
-        style={{ gridTemplateRows: `repeat(${gridLength}, 1fr)` }}
-      >
-        {grid.map((row, rowIndex) => (
-          <div
-            key={rowIndex}
-            className="Row"
-            style={{ gridTemplateColumns: `repeat(${gridLength}, 1fr)` }}
-          >
-            {row.map((cell, colIndex) => (
-              <div
-                key={colIndex}
-                className="Cell"
-                style={{
-                  backgroundColor: colorActiveBorder(rowIndex, colIndex),
-                }}
-              >
+      <main className="container">
+        <section
+          className="Grid"
+          style={{ gridTemplateRows: `repeat(${gridLength}, 1fr)` }}
+        >
+          {grid.map((row, rowIndex) => (
+            <div
+              key={rowIndex}
+              className="Row"
+              style={{ gridTemplateColumns: `repeat(${gridLength}, 1fr)` }}
+            >
+              {row.map((cell, colIndex) => (
                 <div
+                  key={colIndex}
+                  className="Cell"
                   style={{
-                    transform: `rotate(${direction * 90}deg)`,
+                    backgroundColor: colorActiveBorder(rowIndex, colIndex),
                   }}
                 >
-                  {cell}
+                  <div
+                    style={{
+                      transform: `rotate(${direction * 90}deg)`,
+                    }}
+                  >
+                    {cell}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          ))}
+        </section>
       </main>
       <footer>Made with 🧡</footer>
-    </>
+    </div>
   );
 }
 
 export default App;
+
+function IconSelector({
+  selectedIcons,
+  showCheckboxes,
+  onSetSelectedIcons,
+  onSetShowCheckboxes,
+}) {
+  // const [searchTerm, setSearchTerm] = useState(initialIcon);
+  const icons = ['⬆️', '☝️', '🔺', '⌃', '🙏'];
+
+  function toggleIcon(icon) {
+    if (selectedIcons.includes(icon)) {
+      // remove icon
+      onSetSelectedIcons(selectedIcons.filter((el) => el !== icon));
+    } else {
+      // add icon
+      onSetSelectedIcons([...selectedIcons, icon]);
+    }
+  }
+
+  return (
+    <div className="icon-selector-container">
+      <section className="selected-icons">
+        {selectedIcons.map((selectedIcon) => (
+          <button
+            key={selectedIcon}
+            type="button"
+            onClick={() => toggleIcon(selectedIcon)}
+            className="selected-icon btn-pill"
+          >
+            {selectedIcon}
+            <span>x</span>
+          </button>
+        ))}
+      </section>
+      <input
+        type="search"
+        placeholder="search icons..."
+        // onChange={(e) => setSearchTerm(e.target.value)}
+        onFocus={() => onSetShowCheckboxes(true)}
+      />
+      <section className="checkboxes" hidden={!showCheckboxes}>
+        {icons.map((icon) => (
+          <div key={icon}>
+            <input
+              checked={selectedIcons.includes(icon)}
+              key={icon}
+              id="icon"
+              value={icon}
+              type="checkbox"
+              onChange={() => toggleIcon(icon)}
+            />
+            <label htmlFor="icon">{icon}</label>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
